@@ -21,7 +21,7 @@ class PandaRobot(Robot):
         self.gripper = GripperInterface(
             ip_address="localhost",
         )
-        self.robot.update_desired_joint_positions(torch.tensor([0, 0, 0, -1.57, 0, 1.57, 0]))           # Go to Gello standard position, instead of standard home position (self.robot.go_home())
+        self.robot.move_to_joint_positions(torch.tensor([0, 0, 0, -1.57, 0, 1.57, 0]))           # Go to Gello standard position
         self.robot.start_joint_impedance()
         self.gripper.goto(width=MAX_OPEN, speed=255, force=255)
         time.sleep(1)

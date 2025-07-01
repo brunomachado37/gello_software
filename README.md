@@ -15,10 +15,25 @@ cd gello_software
 ```
 git submodule init
 git submodule update
+conda create -n gello python=3.8 -y
 pip install -r requirements.txt
 pip install -e .
 pip install -e third_party/DynamixelSDK/python
 ```
+
+### Aditional setup for Franka
+```
+conda install -c pytorch -c fair-robotics -c aihabitat -c conda-forge polymetis
+```
+Once installed, change the IP address on `~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/robot_client/franka_hardware.yaml` to correspond to your setup.
+
+For example: 
+```
+# line 17 (robot_client.executable_cfg.robot_ip)
+robot_ip: "192.168.10.100"
+```
+
+Do the same for the gripper (`~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/gripper/franka_hand.yaml`)
 
 ## Use with Docker
 First install ```docker``` following this [link](https://docs.docker.com/engine/install/ubuntu/) on your host machine.
@@ -131,6 +146,18 @@ python experiments/run_env.py --agent=gello
 ```
 
 Ideally you can start your GELLO near a known configuration each time. If this is possible, you can set the `--start-joint` flag with GELLO's known starting configuration. This also enables the robot to reset before you begin teleoperation.
+
+## Launching teleoperation on Franka Panda
+1. Turn on the robot, unlock joints on desk and activate FCI
+2. Make sure the Gello controller is on the "Gello standard position", as shown in the images above 
+3. Run the script:
+```
+./scripts/panda/launch_teleoperation.sh
+```
+4. To stop the teleoperation:
+```
+./scripts/panda/kill_all.sh
+```
 
 ## Collect data
 We have provided a simple example for collecting data with gello.
