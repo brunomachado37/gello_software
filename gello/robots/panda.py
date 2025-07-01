@@ -1,4 +1,5 @@
 import time
+import torch
 from typing import Dict
 
 import numpy as np
@@ -11,7 +12,7 @@ MAX_OPEN = 0.09
 class PandaRobot(Robot):
     """A class representing a UR robot."""
 
-    def __init__(self, robot_ip: str = "100.97.47.74"):
+    def __init__(self, robot_ip: str = "localhost"):
         from polymetis import GripperInterface, RobotInterface
 
         self.robot = RobotInterface(
@@ -20,7 +21,7 @@ class PandaRobot(Robot):
         self.gripper = GripperInterface(
             ip_address="localhost",
         )
-        self.robot.go_home()
+        self.robot.update_desired_joint_positions(torch.tensor([0, 0, 0, -1.57, 0, 1.57, 0]))           # Go to Gello standard position, instead of standard home position (self.robot.go_home())
         self.robot.start_joint_impedance()
         self.gripper.goto(width=MAX_OPEN, speed=255, force=255)
         time.sleep(1)
@@ -50,8 +51,6 @@ class PandaRobot(Robot):
         Args:
             joint_state (np.ndarray): The state to command the leader robot to.
         """
-        import torch
-
         self.robot.update_desired_joint_positions(torch.tensor(joint_state[:-1]))
         self.gripper.goto(width=(MAX_OPEN * (1 - joint_state[-1])), speed=1, force=1)
 
