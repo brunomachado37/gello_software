@@ -15,7 +15,8 @@ launch_gripper.py gripper=robotiq_2f gripper.comport=/dev/ttyUSB0 > ./logs/launc
 sleep 5
 
 python experiments/launch_nodes.py --robot=panda --robot_ip=localhost > ./logs/launch_nodes.log 2>&1 &
+python experiments/launch_camera_nodes.py > ./logs/launch_camera_nodes.log 2>&1 &
 
 sleep 2
 
-python experiments/run_env.py --agent=gello --gello_port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &
+python experiments/run_env.py --use-save-interface --agent=gello --gello_port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &

@@ -25,7 +25,7 @@ pip install -e third_party/DynamixelSDK/python
 ```
 conda install -c pytorch -c fair-robotics -c aihabitat -c conda-forge polymetis
 ```
-Once installed, change the IP address on `~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/robot_client/franka_hardware.yaml` to correspond to your setup.
+Once installed, set the IP address on `~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/robot_client/franka_hardware.yaml` to correspond to your setup or simply pass the ip addess as a parameter `robot_client.executable_cfg.robot_ip`.
 
 For example: 
 ```
@@ -33,7 +33,9 @@ For example:
 robot_ip: "192.168.10.100"
 ```
 
-Do the same for the gripper (`~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/gripper/franka_hand.yaml`)
+Do the same for the gripper (`~/miniconda3/envs/gello/lib/python3.8/site-packages/polymetis/conf/gripper/franka_hand.yaml` or `gripper.executable_cfg.robot_ip`)
+
+If you use the Robotiq gripper, set the USB port instead (e.g. `/dev/ttyUSB0` or `gripper.comport`)
 
 ## Use with Docker
 First install ```docker``` following this [link](https://docs.docker.com/engine/install/ubuntu/) on your host machine.

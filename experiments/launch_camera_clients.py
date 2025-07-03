@@ -27,9 +27,9 @@ def main(args):
     while True:
         for display_name, camera in zip(images_display_names, cameras):
             image, depth = camera.read()
-            stacked_depth = np.dstack([depth, depth, depth]).astype(np.uint8)
-            image_depth = cv2.hconcat([image[:, :, ::-1], stacked_depth])
-            cv2.imshow(display_name, image_depth)
+            # stacked_depth = np.dstack([depth, depth, depth]).astype(np.uint8)
+            # image_depth = cv2.hconcat([image[:, :, ::-1], stacked_depth])
+            cv2.imshow(display_name, image)
             cv2.waitKey(1)
 
 
