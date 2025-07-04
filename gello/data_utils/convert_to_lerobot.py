@@ -4,8 +4,8 @@ import argparse
 import datetime
 import time
 
-from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-from lerobot.common.datasets.utils import DEFAULT_FEATURES
+from lerobot.datasets.lerobot_dataset import LeRobotDataset 
+from lerobot.datasets.utils import DEFAULT_FEATURES
 
 
 def get_features(episode):
@@ -59,6 +59,7 @@ def convert(cfg):
         
     for episode in episodes:
         steps = os.listdir(episode)
+        steps.sort()
 
         for step_file in steps:
             step_path = os.path.join(episode, step_file)
@@ -71,7 +72,7 @@ def convert(cfg):
             observation = {
                 "observation.state": step["joint_positions"],
                 "observation.images.wrist_camera": step["wrist_rgb"],
-                "observation.images.base_camera": step["side_rgb"],
+                "observation.images.side_camera": step["side_rgb"],
             }
 
             frame = {**observation, **action}

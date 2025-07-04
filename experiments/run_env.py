@@ -212,7 +212,7 @@ def main(args):
     start_time = time.time()
     while True:
         num = time.time() - start_time
-        message = f"\rTime passed: {round(num, 2)}      s | Frequency: {round(1 / num, 2)}      Hz"
+        message = f"\rTime passed: {round(num, 2)} ms | Frequency: {round(1000 / num, 2)} Hz"
         print_color(
             message,
             color="white",

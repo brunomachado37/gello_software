@@ -170,6 +170,13 @@ Data can then be processed using the demo_to_gdict script.
 python gello/data_utils/demo_to_gdict.py --source-dir=<source dir location>
 ```
 
+Or converted to a LeRobotDataset and uploaded to HuggingFaceHub using the convert_to_lerobot script.
+```
+conda activate lerobot
+
+python gello/data_utils/convert_to_lerobot.py --data_path=<path to raw data> --repo_id=<HF Hub Repository ID> --task_description=<description of the task> --fps=<frequency used during the collect>
+```
+
 ## Running a bimanual system with GELLO
 GELLO also be used in bimanual configurations.
 For an example, see the `bimanual_ur` robot in `launch_nodes.py` and `--bimanual` flag in the `run_env.py` script.
