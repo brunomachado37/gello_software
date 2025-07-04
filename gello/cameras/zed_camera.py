@@ -75,4 +75,4 @@ class ZedCamera(CameraDriver):
         else:
             depth = depth[:, :, None]
 
-        return image, depth
+        return image[:, :, :3][:, :, ::-1], depth

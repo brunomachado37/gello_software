@@ -33,7 +33,7 @@ class Args:
     base_camera_port: int = 5001
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
-    hz: int = 100
+    hz: int = 10
     start_joints: Optional[Tuple[float, ...]] = None
 
     gello_port: Optional[str] = None
@@ -52,7 +52,7 @@ def main(args):
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
             "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+            "side": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
     env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
@@ -212,7 +212,7 @@ def main(args):
     start_time = time.time()
     while True:
         num = time.time() - start_time
-        message = f"\rTime passed: {round(num, 2)}          "
+        message = f"\rTime passed: {round(num, 2)}      s | Frequency: {round(1 / num, 2)}      Hz"
         print_color(
             message,
             color="white",
