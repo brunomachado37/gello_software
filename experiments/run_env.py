@@ -1,6 +1,7 @@
 import datetime
 import glob
 import time
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple
@@ -213,10 +214,12 @@ def main(args):
     print_color("\nStart 🚀🚀🚀", color="green", attrs=("bold",))
 
     save_path = None
-    start_time = time.time()
+    start_time, loop_time = time.time(), time.time()
     while True:
         num = time.time() - start_time
-        message = f"\rTime passed: {round(num, 2)} ms | Frequency: {round(1000 / num, 2)} Hz"
+        message = f"\rTime passed: {round(num, 2)} ms | Frequency: {round(1 / (time.time()-loop_time), 2)} Hz  "
+        loop_time = time.time()
+
         print_color(
             message,
             color="white",
@@ -240,6 +243,8 @@ def main(args):
             elif state == "save":
                 assert save_path is not None, "something went wrong"
                 save_frame(save_path, dt, obs, action)
+            elif state == "delete":
+                shutil.rmtree(save_path)
             elif state == "normal":
                 save_path = None
             else:

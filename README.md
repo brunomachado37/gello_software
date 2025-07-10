@@ -165,6 +165,11 @@ Ideally you can start your GELLO near a known configuration each time. If this i
 We have provided a simple example for collecting data with gello.
 To save trajectories with the keyboard, add the following flag `--use-save-interface`
 
+Before running the script, check if the cameras are working
+```
+python -c "exec(\"import pyzed.sl as sl\nprint(sl.Camera.get_device_list())\")"
+```
+
 Data can then be processed using the demo_to_gdict script.
 ```
 python gello/data_utils/demo_to_gdict.py --source-dir=<source dir location>

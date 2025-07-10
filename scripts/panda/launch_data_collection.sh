@@ -12,6 +12,8 @@ sudo pkill -9 -f launch_camera_nodes.py
 sudo pkill -9 -f run_env.py
 rm ./logs/*.log
 
+sleep 1
+
 launch_robot.py robot_client=franka_hardware robot_client.executable_cfg.robot_ip=192.168.10.100 > ./logs/launch_robot.log 2>&1 &
 launch_gripper.py gripper=robotiq_2f gripper.comport=/dev/ttyUSB0 > ./logs/launch_gripper.log 2>&1 &
 
