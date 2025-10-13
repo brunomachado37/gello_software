@@ -127,7 +127,7 @@ This launched the robot node. A simulated robot using the mujoco viewer should a
 
 Then, launch your GELLO (the controller node).
 ```
-python experiments/run_env.py --agent=gello
+python experiments/run_env.py agent:gello
 ```
 You should be able to use GELLO to control the simulated robot!
 
@@ -144,7 +144,7 @@ The supported robots are in `gello/robots`.
 # Launch all of the node
 python experiments/launch_nodes.py --robot=<your robot>
 # run the enviroment loop
-python experiments/run_env.py --agent=gello
+python experiments/run_env.py agent:gello
 ```
 
 Ideally you can start your GELLO near a known configuration each time. If this is possible, you can set the `--start-joint` flag with GELLO's known starting configuration. This also enables the robot to reset before you begin teleoperation.
@@ -182,9 +182,22 @@ conda activate lerobot
 python gello/data_utils/convert_to_lerobot.py --data_path=<path to raw data> --repo_id=<HF Hub Repository ID> --task_description=<description of the task> --fps=<frequency used during the collect>
 ```
 
+## Running a LeRobot policy
+Create another conda env with the necessary dependencies:
+```
+conda create -n gello_lerobot python=3.12 -y
+pip install lerobot
+```
+
+Run inference:
+```
+conda activate gello_lerobot
+python experiments/run_env.py --use-save-interface agent:le-robot --agent.id=HF_HUB_MODEL_ID --agent.type=POLICY_TYPE --agent.task=TASK_DESCRIPTION
+```
+
 ## Running a bimanual system with GELLO
 GELLO also be used in bimanual configurations.
-For an example, see the `bimanual_ur` robot in `launch_nodes.py` and `--bimanual` flag in the `run_env.py` script.
+For an example, see the `bimanual_ur` robot in `launch_nodes.py` and `--agent.bimanual` flag in the `run_env.py` script.
 
 ## Notes
 Due to the use of multiprocessing, sometimes python process are not killed properly. We have provided the kill_nodes script which will kill the

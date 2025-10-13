@@ -24,4 +24,4 @@ python experiments/launch_camera_nodes.py > ./logs/launch_camera_nodes.log 2>&1 
 
 sleep 2
 
-python experiments/run_env.py --use-save-interface --agent=gello --gello_port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &
+python experiments/run_env.py --use-save-interface --img_size 480 640 agent:gello --agent.port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &

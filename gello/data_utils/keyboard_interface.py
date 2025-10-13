@@ -8,6 +8,7 @@ BLUE = (0, 0, 255)
 KEY_START = pygame.K_s
 KEY_DELETE = pygame.K_d
 KEY_QUIT_RECORDING = pygame.K_q
+KEY_PAUSE = pygame.K_p
 
 
 class KBReset:
@@ -16,6 +17,7 @@ class KBReset:
         self._screen = pygame.display.set_mode((800, 800))
         self._set_color(NORMAL)
         self._saved = False
+        self._pause = False
 
     def update(self) -> str:
         pressed_last = self._get_pressed()
@@ -36,6 +38,11 @@ class KBReset:
             self._set_color(GREEN)
             self._saved = True
             return "start"
+        
+        if KEY_PAUSE in pressed_last:
+            self._set_color((0, 255, 255))
+            self._pause = ~ self._pause
+            return "pause"
 
         self._set_color(NORMAL)
         return "normal"

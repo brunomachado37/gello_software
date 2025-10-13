@@ -2,13 +2,14 @@ import datetime
 import glob
 import time
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import tyro
 
+from gello.agents.config import Gello, LeRobot, Quest, Spacemouse, Dummy
 from gello.agents.agent import BimanualAgent, DummyAgent
 from gello.agents.gello_agent import GelloAgent
 from gello.data_utils.format_obs import save_frame
@@ -28,22 +29,21 @@ def print_color(*args, color=None, attrs=(), **kwargs):
 
 @dataclass
 class Args:
-    agent: str = "none"
+    agent: Union[Gello, Dummy, LeRobot, Quest, Spacemouse] = field(default_factory=Gello)
     robot_port: int = 6001
     wrist_camera_port: int = 5000
     base_camera_port: int = 5001
     hostname: str = "127.0.0.1"
-    robot_type: str = None  # only needed for quest agent or spacemouse agent
+    robot_type: Optional[str] = None  # only needed for quest agent or spacemouse agent
     hz: int = 10
+    img_size: Optional[Tuple[int, int]] = None      # Resize the camera images to img_size, if None, original size is kept
+    save_depth: bool = False                        # Save or not depth information
     start_joints: Optional[Tuple[float, ...]] = None
 
-    gello_port: Optional[str] = None
     mock: bool = False
     use_save_interface: bool = False
     data_dir: str = "~/bc_data"
-    bimanual: bool = False
     verbose: bool = False
-
 
 def main(args):
     if args.mock:
@@ -59,18 +59,19 @@ def main(args):
         }
     else:
         camera_clients = {}
+    print(camera_clients)
 
-    env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
-
-    if args.bimanual:
-        if args.agent == "gello":
+    env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients, image_size=args.img_size, return_depth=args.save_depth)
+    
+    if args.agent.bimanual:
+        if args.agent.name == "gello":
             # dynamixel control box port map (to distinguish left and right gello)
             right = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT7WBG6A-if00-port0"
             left = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT7WBEIA-if00-port0"
             left_agent = GelloAgent(port=left)
             right_agent = GelloAgent(port=right)
             agent = BimanualAgent(left_agent, right_agent)
-        elif args.agent == "quest":
+        elif args.agent.name == "quest":
             from gello.agents.quest_agent import SingleArmQuestAgent
 
             left_agent = SingleArmQuestAgent(robot_type=args.robot_type, which_hand="l")
@@ -79,7 +80,7 @@ def main(args):
             )
             agent = BimanualAgent(left_agent, right_agent)
             # raise NotImplementedError
-        elif args.agent == "spacemouse":
+        elif args.agent.name == "spacemouse":
             from gello.agents.spacemouse_agent import SpacemouseAgent
 
             left_path = "/dev/hidraw0"
@@ -95,7 +96,7 @@ def main(args):
             )
             agent = BimanualAgent(left_agent, right_agent)
         else:
-            raise ValueError(f"Invalid agent name for bimanual: {args.agent}")
+            raise ValueError(f"Invalid agent name for bimanual: {args.agent.name}")
 
         # System setup specific. This reset configuration works well on our setup. If you are mounting the robot
         # differently, you need a separate reset joint configuration.
@@ -109,11 +110,10 @@ def main(args):
         for jnt in np.linspace(curr_joints, reset_joints, steps):
             env.step(jnt)
     else:
-        if args.agent == "gello":
-            gello_port = args.gello_port
+        if args.agent.name == "gello":
+            gello_port = args.agent.port
             if gello_port is None:
                 usb_ports = glob.glob("/dev/serial/by-id/*")
-                print(f"Found {len(usb_ports)} ports")
                 if len(usb_ports) > 0:
                     gello_port = usb_ports[0]
                     print(f"using port {gello_port}")
@@ -136,29 +136,39 @@ def main(args):
                 for jnt in np.linspace(curr_joints, reset_joints, steps):
                     env.step(jnt)
                     time.sleep(0.001)
-        elif args.agent == "quest":
+        elif args.agent.name == "quest":
             from gello.agents.quest_agent import SingleArmQuestAgent
 
             agent = SingleArmQuestAgent(robot_type=args.robot_type, which_hand="l")
-        elif args.agent == "spacemouse":
+        elif args.agent.name == "spacemouse":
             from gello.agents.spacemouse_agent import SpacemouseAgent
 
             agent = SpacemouseAgent(robot_type=args.robot_type, verbose=args.verbose)
-        elif args.agent == "dummy" or args.agent == "none":
+        elif args.agent.name == "dummy" or args.agent.name == "none":
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
-        elif args.agent == "policy":
-            raise NotImplementedError("add your imitation policy here if there is one")
+        elif args.agent.name == "lerobot":
+            from gello.agents.lerobot_agent import LeRobotAgent
+            agent = LeRobotAgent(args.agent.id, args.agent.type, args.agent.task)
+            language_embedding = agent.get_language_embedding()
+        # elif args.agent == "openpi":
+        #      from gello.agents.OpenPIAgent import OpenPIAgent
+        #      agent = OpenPIAgent(args.agent.task)
         else:
             raise ValueError("Invalid agent name")
 
     # going to start position
     print("Going to start position")
-    start_pos = agent.act(env.get_obs())
     obs = env.get_obs()
+    if args.agent.name == "lerobot":
+        obs["task_embed"] = language_embedding
+    start_pos = agent.act(obs)
+    obs = env.get_obs()
+    if args.agent.name == "lerobot":
+        obs["task_embed"] = language_embedding
     joints = obs["joint_positions"]
 
     abs_deltas = np.abs(start_pos - joints)
-    id_max_joint_delta = np.argmax(abs_deltas)
+    id_max_joint_delta = np.argmax(abs_deltas[:6])
 
     max_joint_delta = 0.8
     if abs_deltas[id_max_joint_delta] > max_joint_delta:
@@ -176,36 +186,36 @@ def main(args):
             )
         return
 
-    print(f"Start pos: {len(start_pos)}", f"Joints: {len(joints)}")
     assert len(start_pos) == len(
         joints
     ), f"agent output dim = {len(start_pos)}, but env dim = {len(joints)}"
 
-    max_delta = 0.05
-    for _ in range(25):
+    if args.agent.name in ["gello", "quest", "spacemouse", "dummy", "none"]:
+        max_delta = 0.05
+        for _ in range(25):
+            obs = env.get_obs()
+            command_joints = agent.act(obs)
+            current_joints = obs["joint_positions"]
+            delta = command_joints - current_joints
+            max_joint_delta = np.abs(delta).max()
+            if max_joint_delta > max_delta:
+                delta = delta / max_joint_delta * max_delta
+            env.step(current_joints + delta)
+
         obs = env.get_obs()
-        command_joints = agent.act(obs)
-        current_joints = obs["joint_positions"]
-        delta = command_joints - current_joints
-        max_joint_delta = np.abs(delta).max()
-        if max_joint_delta > max_delta:
-            delta = delta / max_joint_delta * max_delta
-        env.step(current_joints + delta)
-
-    obs = env.get_obs()
-    joints = obs["joint_positions"]
-    action = agent.act(obs)
-    if (action - joints > 0.5).any():
-        print("Action is too big")
-
-        # print which joints are too big
-        joint_index = np.where(action - joints > 0.8)
-        for j in joint_index:
-            print(
-                f"Joint [{j}], leader: {action[j]}, follower: {joints[j]}, diff: {action[j] - joints[j]}"
-            )
-        exit()
-
+        joints = obs["joint_positions"]
+        action = agent.act(obs)
+        if (action - joints > 0.8).any():
+            print("Action is too big")
+        
+            # print which joints are too big
+            joint_index = np.where(action - joints > 0.8)
+            for j in joint_index:
+                print(
+                    f"Joint [{j}], leader: {action[j]}, follower: {joints[j]}, diff: {action[j] - joints[j]}"
+                )
+            exit()
+    
     if args.use_save_interface:
         from gello.data_utils.keyboard_interface import KBReset
 
@@ -231,11 +241,13 @@ def main(args):
         dt = datetime.datetime.now()
         if args.use_save_interface:
             state = kb_interface.update()
-            if state == "start":
+            if state == "pause":
+                continue
+            elif state == "start":
                 dt_time = datetime.datetime.now()
                 save_path = (
                     Path(args.data_dir).expanduser()
-                    / args.agent
+                    / args.agent.name
                     / dt_time.strftime("%m%d_%H%M%S")
                 )
                 save_path.mkdir(parents=True, exist_ok=True)
@@ -249,7 +261,15 @@ def main(args):
                 save_path = None
             else:
                 raise ValueError(f"Invalid state {state}")
-        obs = env.step(action)
+
+        if args.use_save_interface:
+            if not kb_interface._pause:
+                obs = env.step(action)
+        else:
+            obs = env.step(action)
+        if args.agent.name == "lerobot":
+            obs["task_embed"] = language_embedding
+
 
 
 if __name__ == "__main__":

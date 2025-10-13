@@ -2,7 +2,7 @@ source ~/miniconda3/bin/activate
 conda activate gello
 
 sudo chmod 666 /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0
-sudo chmod 666 /dev/ttyUSB1
+sudo chmod 666 /dev/ttyUSB0
 
 sudo pkill -9 run_server
 sudo pkill -9 franka_panda_cl
@@ -14,7 +14,7 @@ rm ./logs/*.log
 sleep 1
 
 launch_robot.py robot_client=franka_hardware robot_client.executable_cfg.robot_ip=192.168.10.100 > ./logs/launch_robot.log 2>&1 &
-launch_gripper.py gripper=robotiq_2f gripper.comport=/dev/ttyUSB1 > ./logs/launch_gripper.log 2>&1 &
+launch_gripper.py gripper=robotiq_2f gripper.comport=/dev/ttyUSB0 > ./logs/launch_gripper.log 2>&1 &
 
 sleep 5
 
@@ -22,4 +22,4 @@ python experiments/launch_nodes.py --robot=panda --robot_ip=localhost > ./logs/l
 
 sleep 2
 
-python experiments/run_env.py --agent=gello --gello_port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &
+python experiments/run_env.py agent:gello --agent.port=/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTA7NNHW-if00-port0 > ./logs/run_env.log 2>&1 &
